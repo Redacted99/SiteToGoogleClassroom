@@ -1,12 +1,32 @@
-﻿<Window x:Class="SitesToClassroomNotUWP.MainWindow"
+﻿<Window x:Class="SitesToClassroom.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:SitesToClassroomNotUWP"
+        xmlns:local="clr-namespace:SitesToClassroom"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
-        
+        Title="Assignments from Sites to Classroom" Height="450" Width="800">
+
+    <Grid Margin="10">
+
+        <Grid Margin="10" Height="800" >
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="100"></ColumnDefinition>
+                <ColumnDefinition Width="*"></ColumnDefinition>
+                <ColumnDefinition Width="150"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="40"/>
+                <RowDefinition Height="100"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <TextBlock Margin="10,0,0,0" VerticalAlignment="Center">Site URL:</TextBlock>
+                <TextBox x:Name="SiteURL" Height="24" Margin="10,0,0,0" Grid.Column="1"></TextBox>
+                <Button x:Name="FetchSite" Width="120" Grid.Column="2" HorizontalAlignment="Center" Height="32" Click="FetchSite_Click">GO!</Button>
+            <TextBlock x:Name="Wait" Grid.Row="1" Grid.Column="1" FontSize="28" TextAlignment="Center" TextWrapping="Wrap" Visibility="Hidden">Please Wait...</TextBlock>
+            <TextBlock x:Name="Status" Grid.Row="1" Grid.Column="1" FontSize="28" TextAlignment="Center" TextWrapping="Wrap" Visibility="Hidden"></TextBlock>
+                <Button x:Name="Next" Width="120" Grid.Row="1" Grid.Column="2" HorizontalAlignment="Center" Height="32" Click="Next_Click" Visibility="Hidden" >Next</Button>
+
+        </Grid>
     </Grid>
 </Window>
