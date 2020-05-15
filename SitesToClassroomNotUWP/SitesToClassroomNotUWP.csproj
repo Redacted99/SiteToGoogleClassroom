@@ -79,6 +79,7 @@
     <Compile Include="ClassroomWindow.xaml.cs">
       <DependentUpon>ClassroomWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Classroom\GoogleClassroom.cs" />
     <Compile Include="LogWindow.xaml.cs">
       <DependentUpon>LogWindow.xaml</DependentUpon>
     </Compile>

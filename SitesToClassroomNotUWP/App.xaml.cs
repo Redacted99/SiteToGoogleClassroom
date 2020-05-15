@@ -24,6 +24,10 @@ namespace SitesToClassroom
             logWindow.Show();
         }
 
+        public static void CloseLogWindow()
+        {
+            logWindow.Close();
+        }
 
         public static void GoToWindow( Window nextWindow, Window thisWindow)
         {

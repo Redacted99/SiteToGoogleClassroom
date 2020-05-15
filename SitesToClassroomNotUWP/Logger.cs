@@ -36,15 +36,16 @@ namespace SitesToClassroom
         #endregion
 
 
-        public void Log(string message)
+        public string Log(string message)
         {
             LogEntries.Add(new LogEntry { DateTime = DateTime.Now, Message = message, Index = ++messageCounter });
 #if DEBUG 
             Console.WriteLine(message);
 #endif
+            return message;
         }
 
-        public void Log(Exception exception, string message)
+        public string Log(Exception exception, string message)
         {
             LogEntries.Add(new LogEntry { DateTime = DateTime.Now, Message = exception.Message, Index = ++messageCounter });
             LogEntries.Add(new LogEntry { DateTime = DateTime.Now, Message = message, Index = ++messageCounter });
@@ -52,6 +53,7 @@ namespace SitesToClassroom
             Console.WriteLine(exception);
             Console.WriteLine(message);
 #endif
+            return message;
         }
     }
 

@@ -43,24 +43,38 @@ namespace SitesToClassroom
             int startIndex;
             try
             {
+                Status.Visibility = Visibility.Visible;
                 // check input parameter
                 if (string.IsNullOrEmpty(SiteURL.Text))
                 {
-                    logger.Log("A URL is required!");
+                    Status.Text = logger.Log("A URL is required!");
                     return;
                 }
 
                 Uri siteUri;
                 if (!Uri.TryCreate(SiteURL.Text, UriKind.Absolute, out siteUri))
                 {
-                    logger.Log("Site URL is not in a valid format!");
+                    Status.Text = logger.Log("Site URL is not in a valid format!");
                     return;
                 }
+
+                // check if there is a publication date
+                DateTime startPubDate = DateTime.MinValue;
+                if (this.PubDateText.Text.Length > 0)
+                {
+                    if (!DateTime.TryParse(PubDateText.Text, out startPubDate))
+                    {
+                        this.Status.Text = logger.Log("Invalid publication starting date");
+                        return;
+                    }
+                }
+                Status.Text = string.Empty;
 
                 // prohibit clicking
                 ((Button)sender).IsEnabled = false;
                 this.Wait.Visibility = Visibility.Visible;
 
+                
                 // loop through all pages ?start-index=1 ...
                 startIndex = 1;
 
@@ -97,8 +111,10 @@ namespace SitesToClassroom
                         }
                         startIndex += document.SelectNodes("//atom:entry", nsmgr).Count;
                     }
-                    App.SiteAssignments = siteAssignments;
-                }
+
+                    // copy assignments created on or after pubdate to app store for processing by classroom page
+                    App.SiteAssignments = siteAssignments.Where(pd => pd.Published >= startPubDate).ToList();
+                                    }
                 localSettings["SiteURL"] = SiteURL.Text;                    // update persistent parameter
             }
             catch (Exception eX)
@@ -110,7 +126,7 @@ namespace SitesToClassroom
             }
 
             this.Wait.Visibility = Visibility.Hidden;
-            Status.Text = $"Google Site processed, {startIndex - 1} assignments read";
+            Status.Text = $"Google Site processed, {startIndex - 1} assignments read, {App.SiteAssignments.Count} selected";
             Status.Visibility = Visibility.Visible;
             if (startIndex > 1)
                 Next.Visibility = Visibility.Visible;
@@ -144,6 +160,11 @@ namespace SitesToClassroom
         private void Next_Click(object sender, RoutedEventArgs e)
         {
             App.GoToWindow(new ClassroomWindow(), this);
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            
         }
     }
 }

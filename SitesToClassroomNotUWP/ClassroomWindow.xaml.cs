@@ -27,8 +27,7 @@ namespace SitesToClassroom
     /// </summary>
     public partial class ClassroomWindow : Window
     {
-        static string[] Scopes = { ClassroomService.Scope.ClassroomCourses };
-        static string ApplicationName = "Google Sites to Google Classroom Transfer";
+
         private Logger logger = Logger.Instance;
         private Classroom.Course selectedCourse;
 
@@ -37,44 +36,40 @@ namespace SitesToClassroom
             InitializeComponent();
         }
 
+        /// <summary>
+        /// Create assignments within the selected course
+        /// </summary>
         private void CreateAssignments_Click(object sender, RoutedEventArgs e)
         {
 
-            logger.Log($"Starting loading for {selectedCourse.CourseId}");
-            ((Button)sender).IsEnabled = false;
+            logger.Log($"Starting load of assignments for {selectedCourse.CourseId}");
+            ((Button)sender).Visibility = Visibility.Collapsed;
+            Status.Text = "Please wait (this may take a while)";
+            Status.Visibility = Visibility.Visible;
 
+            if (App.SiteAssignments == null || App.SiteAssignments.Count == 0)
+            {
+                Status.Text = logger.Log("Unexpected no assignements in site extraction");
+                return;
+            }
+            GoogleClassroom.CreateAssignments(App.SiteAssignments, selectedCourse);
+            Status.Text = logger.Log("Completed assignment load");
+            CloseButton.Visibility = Visibility.Visible;
         }
 
+        /// <summary>
+        /// Window loaded -- fetch the list of classes associcated with this user
+        /// </summary>
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            UserCredential credential;
             logger.Log("Starting Assignement Create");
 
-            using (var stream =
-                new FileStream("credentials.json", FileMode.Open, FileAccess.Read))
-            {
-                // The file token.json stores the user's access and refresh tokens, and is created
-                // automatically when the authorization flow completes for the first time.
-                string credPath = "token.json";
-                credential = GoogleWebAuthorizationBroker.AuthorizeAsync(
-                    GoogleClientSecrets.Load(stream).Secrets,
-                    Scopes,
-                    "user",
-                    CancellationToken.None,
-                    new FileDataStore(credPath, true)).Result;
-                logger.Log("Credential file saved to: " + credPath);
-            }
-
             // Create Classroom API service.
-            var service = new ClassroomService(new BaseClientService.Initializer()
-            {
-                HttpClientInitializer = credential,
-                ApplicationName = ApplicationName,
-            });
+            var service = GoogleClassroom.CreateApiService();
 
             // Define request parameters.
             CoursesResource.ListRequest request = service.Courses.List();
-            request.PageSize = 10;
+            request.PageSize = 100;
 
             // List courses.
             ListCoursesResponse response = request.Execute();
@@ -98,8 +93,7 @@ namespace SitesToClassroom
             }
             else
             {
-                logger.Log("No courses found.");
-                Status.Text = "No courses found!";
+                Status.Text = logger.Log("No courses found.");
             }
         }
 
@@ -108,6 +102,12 @@ namespace SitesToClassroom
             Status.Visibility = Visibility.Hidden;
             selectedCourse = (Classroom.Course)e.AddedItems[0];
             this.CreateAssignments.Visibility = Visibility.Visible;
+        }
+
+        private void CloseButton_Click(object sender, RoutedEventArgs e)
+        {
+            App.CloseLogWindow();
+            this.Close();
         }
     }
 }
