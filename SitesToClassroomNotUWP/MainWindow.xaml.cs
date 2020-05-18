@@ -35,9 +35,6 @@ namespace SitesToClassroom
             logger.Log("Starting...");
         }
 
-        //https://sites.google.com/feeds/content/site/wardmaribeth/
-        //https://sites.google.com/site/wardmaribeth/
-
         private async void FetchSite_Click(object sender, RoutedEventArgs e)
         {
             int startIndex;
@@ -111,10 +108,9 @@ namespace SitesToClassroom
                         }
                         startIndex += document.SelectNodes("//atom:entry", nsmgr).Count;
                     }
-
-                    // copy assignments created on or after pubdate to app store for processing by classroom page
-                    App.SiteAssignments = siteAssignments.Where(pd => pd.Published >= startPubDate).ToList();
-                                    }
+                }
+                // copy assignments created on or after pubdate to app store for processing by classroom page
+                App.SiteAssignments = siteAssignments.Where(pd => pd.Published >= startPubDate).ToList();
                 localSettings["SiteURL"] = SiteURL.Text;                    // update persistent parameter
             }
             catch (Exception eX)
@@ -126,7 +122,7 @@ namespace SitesToClassroom
             }
 
             this.Wait.Visibility = Visibility.Hidden;
-            Status.Text = $"Google Site processed, {startIndex - 1} assignments read, {App.SiteAssignments.Count} selected";
+            Status.Text = $"Google Site processed, {App.SiteAssignments.Count} assignments selected";
             Status.Visibility = Visibility.Visible;
             if (startIndex > 1)
                 Next.Visibility = Visibility.Visible;

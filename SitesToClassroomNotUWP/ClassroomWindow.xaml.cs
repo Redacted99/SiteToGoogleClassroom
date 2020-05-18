@@ -41,9 +41,9 @@ namespace SitesToClassroom
         /// </summary>
         private void CreateAssignments_Click(object sender, RoutedEventArgs e)
         {
-
             logger.Log($"Starting load of assignments for {selectedCourse.CourseId}");
             ((Button)sender).Visibility = Visibility.Collapsed;
+            CoursesDisplay.Visibility = Visibility.Collapsed;
             Status.Text = "Please wait (this may take a while)";
             Status.Visibility = Visibility.Visible;
 
@@ -52,7 +52,25 @@ namespace SitesToClassroom
                 Status.Text = logger.Log("Unexpected no assignements in site extraction");
                 return;
             }
-            GoogleClassroom.CreateAssignments(App.SiteAssignments, selectedCourse);
+
+            GoogleClassroomManager googleClassroomManager = new GoogleClassroomManager();
+            googleClassroomManager.CreateEnded += GoogleClassroomManager_CreateEnded;
+            googleClassroomManager.CreateAssignments(App.SiteAssignments, selectedCourse);
+        }
+
+        /// <summary>
+        /// Raised when all create operations are completed
+        /// </summary>
+        private void GoogleClassroomManager_CreateEnded(object sender, EventArgs e)
+        {
+            this.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background, (System.Threading.SendOrPostCallback)delegate { CompleteCreate(); }, null);
+        }
+
+        /// <summary>
+        /// reset UI and issue messages when complete
+        /// </summary>
+        private void CompleteCreate()
+        {
             Status.Text = logger.Log("Completed assignment load");
             CloseButton.Visibility = Visibility.Visible;
         }
@@ -62,10 +80,10 @@ namespace SitesToClassroom
         /// </summary>
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            logger.Log("Starting Assignement Create");
+            logger.Log("Starting Assignment Create");
 
             // Create Classroom API service.
-            var service = GoogleClassroom.CreateApiService();
+            var service = GoogleClassroomManager.CreateApiService();
 
             // Define request parameters.
             CoursesResource.ListRequest request = service.Courses.List();
@@ -86,7 +104,7 @@ namespace SitesToClassroom
             {
                 foreach (var course in response.Courses)
                 {
-                    logger.Log($"{course.Name} ({course.Id})");
+                    logger.Log($"{course.Name} ({course.Id}, {course.CourseState}");
                     courses.Add(new Classroom.Course { CourseId = course.Id, CourseName = course.Name });
                 }
                 Status.Text = "Select a course and press Create";

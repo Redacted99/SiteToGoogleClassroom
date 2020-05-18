@@ -14,10 +14,34 @@ using System.Threading.Tasks;
 
 namespace SitesToClassroom.Classroom
 {
-    public static class GoogleClassroom
+    public class GoogleClassroomManager
     {
-        static string[] Scopes = { ClassroomService.Scope.ClassroomCourses, ClassroomService.Scope.ClassroomCourseworkStudents };
-        static string ApplicationName = "Google Sites to Google Classroom Transfer";
+        #region constants
+        private static string[] Scopes = { ClassroomService.Scope.ClassroomCourses, ClassroomService.Scope.ClassroomCourseworkStudents };
+        private static string ApplicationName = "Google Sites to Google Classroom Transfer";
+        #endregion
+
+        #region Fields
+        private List<Sites.SiteAssignment> sitePages;
+        private Course selectedCourse;
+        private ClassroomService service;
+        #endregion
+
+        #region Events
+        /// <summary>
+        /// Raised when create operation ends
+        /// </summary>
+        public event EventHandler CreateEnded;
+
+        public void OnCreateEnded()
+        {
+            var handler = CreateEnded;
+            if (handler != null)
+                handler(this, new EventArgs());
+        }
+        #endregion
+
+
 
         /// <summary>
         /// create the Google Classroom API service, login if necessary
@@ -27,8 +51,9 @@ namespace SitesToClassroom.Classroom
         {
             Logger logger = Logger.Instance; ;
             UserCredential credential;
-            logger.Log("Starting Assignement Create");
+            logger.Log("Starting login");
 
+            // login
             using (var stream = new FileStream("credentials.json", FileMode.Open, FileAccess.Read))
             {
                 // The file token.json stores the user's access and refresh tokens, and is created
@@ -53,9 +78,25 @@ namespace SitesToClassroom.Classroom
         }
 
 
-        public static bool CreateAssignments(List<Sites.SiteAssignment> sitePages, Course selectedCourse)
+        /// <summary>
+        /// create each assignment (done in a seperate thread to not block API)
+        /// </summary>
+        public void CreateAssignments(List<Sites.SiteAssignment> sitePages, Course selectedCourse)
         {
-            var service = CreateApiService();
+            this.service = CreateApiService();
+            this.sitePages = sitePages;
+            this.selectedCourse = selectedCourse;
+
+            ThreadPool.QueueUserWorkItem(new WaitCallback(DoApiWork));
+        }
+
+        /// <summary>
+        /// actual code to create one assignement for each sitePage
+        /// </summary>
+        /// <param name="state"></param>
+        private void DoApiWork(object state)
+        {
+
             foreach (var siteAssignment in sitePages)
             {
                 CourseWork work = new CourseWork
@@ -68,14 +109,11 @@ namespace SitesToClassroom.Classroom
                     State = "DRAFT"
                 };
 
-
-
                 work = service.Courses.CourseWork.Create(work, selectedCourse.CourseId).Execute();
-                Logger.Instance.Log($"Assignment {work.Title}[{work.Id}] created");
+                //Logger.Instance.Log($"Assignment {work.Title}[{work.Id}] created");
             }
 
-
-            return false;
+            OnCreateEnded();
         }
     }
 }
